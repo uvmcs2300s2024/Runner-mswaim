@@ -46,11 +46,24 @@ float Rect::getTop() const         { return pos.y + (size.y / 2); }
 float Rect::getBottom() const      { return pos.y - (size.y / 2); }
 
 bool Rect::isOverlapping(const Rect &r1, const Rect &r2) {
-    // TODO: Implement this method
     // There are only two cases when rectangles are *not* overlapping:
     //    1. when one is to the left of the other
     //    2. when one is above the other
-    return false; // placeholder value for compilation
+    if (r1.getRight() < r2.getLeft()){
+        return false;
+    }if (r1.getLeft () > r2.getLeft()){
+        return false;
+    }
+    if (r1.getTop() < r2.getBottom()){
+        return false;
+    }
+    if (r1.getBottom() > r2.getTop()){
+        return false;
+    }
+    else{
+        return true;
+    }
+
 }
 
 bool Rect::isOverlapping(const Rect &other) const {

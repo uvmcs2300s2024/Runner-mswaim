@@ -65,9 +65,7 @@ void Engine::initShaders() {
 }
 
 void Engine::initShapes() {
-    // TODO: Initialize the user to be a 10x10 white block
-    //       centered at (0, 0)
-    user = make_unique<Rect>(shapeShader, vec2(width, height), vec2(0, 0), black); // placeholder for compilation
+    user = make_unique<Rect>(shapeShader, vec2(0, 0), vec2(10, 10), white); // placeholder for compilation
 
     // Init grass
     grass = make_unique<Rect>(shapeShader, vec2(width/2, 50), vec2(width, height / 3), grassGreen);
@@ -75,6 +73,7 @@ void Engine::initShapes() {
     // Init mountains
     mountains.push_back(make_unique<Triangle>(shapeShader, vec2(width/4, 300), vec2(width, 400), darkGreen));
     mountains.push_back(make_unique<Triangle>(shapeShader, vec2(2*width/3, 300), vec2(width, 500), darkGreen));
+
 
     // Init buildings from closest to furthest
     int totalBuildingWidth = 0;
@@ -92,19 +91,36 @@ void Engine::initShapes() {
     }
     // Populate second set of buildings
     totalBuildingWidth = 0;
+    vec2 buildingSizeSecond;
     while (totalBuildingWidth < width + 100) {
-        // TODO: Populate this vector of darkBlue buildings
         // Building height between 100-200
+        buildingSizeSecond.y = rand() % 51 + 100;
         // Building width between 50-100
-        totalBuildingWidth += buildingSize.x + 5;
+        buildingSizeSecond.x = rand() % 21 + 50;
+        buildings2.push_back(make_unique<Rect>(shapeShader,
+                                               vec2(totalBuildingWidth + (buildingSizeSecond.x / 2.0) + 5,
+                                                    ((buildingSizeSecond.y / 2.0) + 50)),
+                                               buildingSizeSecond, darkBlue));
+
+
+        totalBuildingWidth += buildingSizeSecond.x + 5;
     }
     // Populate third set of buildings
     totalBuildingWidth = 0;
+    vec2 buildingSizeThird;
     while (totalBuildingWidth < width + 200) {
-        // TODO: Populate this vector of purple buildings
         // Building height between 200-400
+        buildingSizeThird.y = rand() % 51 + 200;
         // Building width between 100-200
-        totalBuildingWidth += buildingSize.x + 5;
+        buildingSizeThird.x = rand() % 21 + 100;
+        buildings3.push_back(make_unique<Rect>(shapeShader,
+                                               vec2(totalBuildingWidth + (buildingSizeThird.x / 2.0) + 5,
+                                                    ((buildingSizeThird.y / 2.0) + 50)),
+                                               buildingSizeThird, purple));
+
+
+
+        totalBuildingWidth += buildingSizeThird.x + 5;
     }
 }
 
@@ -129,9 +145,19 @@ void Engine::processInput() {
     // Update mouse rect to follow mouse
     MouseY = height - MouseY; // make sure mouse y-axis isn't flipped
 
-    // TODO: make the user move with the mouse
 
-    for (const unique_ptr<Rect>& r : buildings1) {
+
+    if (MouseX >= 0 && MouseX <= width && MouseY >= 0 && MouseY <= height) {
+        // Calculate the new position of the user based on mouse position
+        double newX = MouseX / (double)width;
+        double newY = MouseY / (double)height;
+
+
+        user->setPos(vec2((newX * width), (newY * height)));
+    }
+
+
+        for (const unique_ptr<Rect>& r : buildings1) {
         if (r->isOverlapping(*user)) {
             r->setColor(orange);
         } else {
@@ -139,9 +165,21 @@ void Engine::processInput() {
         }
     }
 
-    // TODO: Update the colors of buildings2 and buildings3.
-    //  Note that darkBlue buildings turn cyan when overlapping
-    //  with the user, and purple buildings turn magenta.
+    for (const unique_ptr<Rect>& r : buildings2) {
+        if (r->isOverlapping(*user)) {
+            r->setColor(cyan);
+        } else {
+            r->setColor(darkBlue);
+        }
+    }
+
+    for (const unique_ptr<Rect>& r : buildings3) {
+        if (r->isOverlapping(*user)) {
+            r->setColor(magenta);
+        } else {
+            r->setColor(purple);
+        }
+    }
 
 
     // If the user is overlapping with the top of the mountain,
@@ -171,9 +209,27 @@ void Engine::update() {
         }
     }
 
-    // TODO: Make the other two vectors of buildings move.
-    //  The larger the buildings, the slower they should move.
+    for (int i = 0; i < buildings2.size(); ++i) {
+        // Move all the red buildings to the left
+        buildings2[i]->moveX(-1.2);
+        // If a building has moved off the screen
+        if (buildings2[i]->getPosX() < -(buildings2[i]->getSize().x/2)) {
+            // Set it to the right of the screen so that it passes through again
+            int buildingOnLeft = (buildings2[i] == buildings2[0]) ? buildings2.size()-1 : i - 1;
+            buildings2[i]->setPosX(buildings2[buildingOnLeft]->getPosX() + buildings2[buildingOnLeft]->getSize().x/2 + buildings2[i]->getSize().x/2 + 5);
+        }
+    }
 
+    for (int i = 0; i < buildings3.size(); ++i) {
+        // Move all the red buildings to the left
+        buildings3[i]->moveX(-1);
+        // If a building has moved off the screen
+        if (buildings3[i]->getPosX() < -(buildings3[i]->getSize().x/2)) {
+            // Set it to the right of the screen so that it passes through again
+            int buildingOnLeft = (buildings3[i] == buildings3[0]) ? buildings3.size()-1 : i - 1;
+            buildings3[i]->setPosX(buildings3[buildingOnLeft]->getPosX() + buildings3[buildingOnLeft]->getSize().x/2 + buildings3[i]->getSize().x/2 + 5);
+        }
+    }
 }
 
 void Engine::render() {
@@ -188,9 +244,28 @@ void Engine::render() {
     grass->setUniforms();
     grass->draw();
 
-    // TODO: Add logic to draw the the user and the buildings.
-    //  Note that the order of drawing matters because whatever
-    //  is drawn last appears on top.
+
+
+    for (const unique_ptr<Rect>& b : buildings3) {
+        b->setUniforms();
+        b->draw();
+    }
+
+    for (const unique_ptr<Rect>& b : buildings2) {
+        b->setUniforms();
+        b->draw();
+    }
+
+    for (const unique_ptr<Rect>& b : buildings1) {
+        b->setUniforms();
+        b->draw();
+    }
+
+    user->setUniforms();
+    user->draw();
+
+
+
 
 
     glfwSwapBuffers(window);
