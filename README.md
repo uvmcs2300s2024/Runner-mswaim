@@ -1,3 +1,6 @@
+# Starter code provided by Lisa Dion
+
+
 # Runner
 
 Beware of the peak of the mountains!
